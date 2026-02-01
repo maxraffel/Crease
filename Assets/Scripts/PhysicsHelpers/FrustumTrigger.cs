@@ -211,6 +211,29 @@ namespace PhysicsHelpers
                     new Vector3(cos * bottomRadius, -halfH, sin * bottomRadius)
                 );
             }
+
+            // Draw direction arrow from bottom to top center
+            DrawDirectionArrow(halfH);
+        }
+
+        private void DrawDirectionArrow(float halfH)
+        {
+            Gizmos.color = Color.white;
+            Vector3 start = new Vector3(0, -halfH, 0);
+            Vector3 end = new Vector3(0, halfH, 0);
+            
+            // Draw the main shaft
+            Gizmos.DrawLine(start, end);
+
+            // Draw arrow head (simple lines)
+            float arrowHeadSize = height * 0.15f;
+            Vector3 right = new Vector3(arrowHeadSize, 0, 0);
+            Vector3 forward = new Vector3(0, 0, arrowHeadSize);
+            
+            Gizmos.DrawLine(end, end + new Vector3(arrowHeadSize, -arrowHeadSize, 0));
+            Gizmos.DrawLine(end, end + new Vector3(-arrowHeadSize, -arrowHeadSize, 0));
+            Gizmos.DrawLine(end, end + new Vector3(0, -arrowHeadSize, arrowHeadSize));
+            Gizmos.DrawLine(end, end + new Vector3(0, -arrowHeadSize, -arrowHeadSize));
         }
 
         private void OnDrawGizmosSelected()
