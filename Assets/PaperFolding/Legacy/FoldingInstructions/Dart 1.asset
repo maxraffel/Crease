@@ -1,0 +1,185 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de8269f3c2163bd4389fd7f71cba087f, type: 3}
+  m_Name: Dart 1
+  m_EditorClassIdentifier: 
+  sequenceName: Dart
+  description: 
+  steps:
+  - rid: 7203161422217871426
+  - rid: 7203161422217871427
+  - rid: 7203161422217871438
+  - rid: 7203161422217871428
+  - rid: 7203161422217871429
+  - rid: 7203161422217871430
+  - rid: 7203161620604780616
+  - rid: 7203161422217871437
+  - rid: 7203161422217871436
+  - rid: 7203161620604780623
+  autoPlay: 0
+  loop: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 7203161422217871426
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 0, y: 0}
+        tagName: corner_1
+        tagExpression: 
+        foldAngle: 180
+        duration: 1
+        useCameraPlane: 1
+    - rid: 7203161422217871427
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 1, y: 0}
+        tagName: corner_2
+        tagExpression: 
+        foldAngle: 180
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871428
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 1, y: 0.5}
+        tagName: half
+        tagExpression: 
+        foldAngle: -180
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871429
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 1, y: 0.5}
+        tagName: wing1_1
+        tagExpression: half_moved
+        foldAngle: -178
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871430
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 0.25, y: 1}
+        tagName: wing1_2
+        tagExpression: half_moved
+        foldAngle: -90
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871436
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 0, y: 0.2}
+        tagName: wing2_2
+        tagExpression: half_static
+        foldAngle: 90
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871437
+      type: {class: FoldStepData, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        handleUV: {x: 0, y: 0.5}
+        tagName: wing2_1
+        tagExpression: half_static
+        foldAngle: 180
+        duration: 0
+        useCameraPlane: 1
+    - rid: 7203161422217871438
+      type: {class: CameraMoveStep, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        rotation: {x: 0, y: 180, z: 0}
+        distance: 1
+        duration: 1
+        easeCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+    - rid: 7203161620604780616
+      type: {class: CameraMoveStep, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        rotation: {x: 180, y: 180, z: 180}
+        distance: 1
+        duration: 1
+        easeCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+    - rid: 7203161620604780623
+      type: {class: CameraMoveStep, ns: PaperFolding, asm: Assembly-CSharp}
+      data:
+        rotation: {x: -53.6, y: 18.63, z: 73}
+        distance: 1
+        duration: 1
+        easeCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
