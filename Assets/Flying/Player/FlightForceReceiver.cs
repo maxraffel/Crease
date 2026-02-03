@@ -1,78 +1,93 @@
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(FlightController))]
 public class FlightForceReceiver : MonoBehaviour
 {
+    [Header("Wind Source")]
+    [Tooltip("Current active wind zones affecting this plane. Automatically managed by triggers.")]
+    public List<WindProvider> activeWindZones = new List<WindProvider>();
+
+    [Header("Settings")]
+    [Tooltip("Multiplier for how much the wind affects the physics.")]
+    public float windForceMultiplier = 1.0f;
+
     private Rigidbody _rb;
     private FlightController _flightController;
-    private float _defaultStability;
-    private Coroutine _recoveryCoroutine;
-
-    [Header("Impact Settings")]
-    [Tooltip("How fast stability recovers after an impact.")]
-    [SerializeField] private float stabilityRecoverySpeed = 2.0f;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
         _flightController = GetComponent<FlightController>();
-        _defaultStability = _flightController.stability;
+    }
+
+    public void AddWindZone(WindProvider zone)
+    {
+        if (!activeWindZones.Contains(zone))
+        {
+            activeWindZones.Add(zone);
+        }
+    }
+
+    public void RemoveWindZone(WindProvider zone)
+    {
+        if (activeWindZones.Contains(zone))
+        {
+            activeWindZones.Remove(zone);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (activeWindZones.Count == 0) return;
+
+        Vector3 totalWindForce = Vector3.zero;
+
+        // Sum up forces from all active zones at the plane's center position
+        for (int i = activeWindZones.Count - 1; i >= 0; i--)
+        {
+            WindProvider zone = activeWindZones[i];
+            if (zone == null) 
+            {
+                activeWindZones.RemoveAt(i);
+                continue;
+            }
+            // Use transform.position (Center of the plane) for detection
+            totalWindForce += zone.GetWindForceAtPoint(transform.position);
+        }
+
+        // Apply Physics Force
+        if (totalWindForce.sqrMagnitude > 0.01f)
+        {
+            Vector3 finalForce = totalWindForce * windForceMultiplier;
+            _rb.AddForce(finalForce, ForceMode.Force);
+        }
     }
 
     /// <summary>
-    /// Apply an instantaneous force (Impulse) that also destabilizes the flight.
+    /// Apply an instantaneous force (Impulse).
     /// Great for explosions, collisions, or strong wind gusts.
     /// </summary>
     /// <param name="force">The force vector.</param>
-    /// <param name="destabilizeAmount">How much to reduce stability (0-1). 1 means set stability to 0.</param>
-    public void AddImpact(Vector3 force, float destabilizeAmount = 1.0f)
+    public void AddImpact(Vector3 force)
     {
         _rb.AddForce(force, ForceMode.Impulse);
-        ApplyInstability(destabilizeAmount);
     }
 
     /// <summary>
-    /// Apply a continuous force. This works like standard AddForce but ensures the flight controller
-    /// doesn't immediately fight it if destabilize is true.
+    /// Apply a continuous force.
     /// </summary>
-    public void AddExternalForce(Vector3 force, ForceMode mode = ForceMode.Force, float destabilizeAmount = 0.1f)
+    public void AddExternalForce(Vector3 force, ForceMode mode = ForceMode.Force)
     {
         _rb.AddForce(force, mode);
-        ApplyInstability(destabilizeAmount);
     }
 
     /// <summary>
-    /// Adds a standard explosion force and destabilizes flight.
+    /// Adds a standard explosion force.
     /// </summary>
-    public void AddExplosionForce(float explosionForce, Vector3 explosionPosition, float explosionRadius, float upwardsModifier = 0.0f, float destabilizeAmount = 1.0f)
+    public void AddExplosionForce(float explosionForce, Vector3 explosionPosition, float explosionRadius, float upwardsModifier = 0.0f)
     {
         _rb.AddExplosionForce(explosionForce, explosionPosition, explosionRadius, upwardsModifier, ForceMode.Impulse);
-        ApplyInstability(destabilizeAmount);
-    }
-
-    private void ApplyInstability(float amount)
-    {
-        // Reduce current stability
-        float newStability = Mathf.Clamp01(_flightController.stability - amount);
-        _flightController.stability = newStability;
-
-        // Restart recovery routine
-        if (_recoveryCoroutine != null) StopCoroutine(_recoveryCoroutine);
-        _recoveryCoroutine = StartCoroutine(RecoverStability());
-    }
-
-    private IEnumerator RecoverStability()
-    {
-        while (_flightController.stability < _defaultStability)
-        {
-            _flightController.stability += Time.deltaTime * stabilityRecoverySpeed;
-            if (_flightController.stability > _defaultStability)
-                _flightController.stability = _defaultStability;
-            
-            yield return null;
-        }
-        _recoveryCoroutine = null;
     }
 }
