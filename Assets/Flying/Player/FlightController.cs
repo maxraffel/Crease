@@ -21,8 +21,7 @@ public class FlightController : MonoBehaviour
 
     private float roll = 0f;
     private float targetRoll = 0f;
-
-
+    
     [SerializeField] private float gravity = 0.08f;
     [SerializeField] private float lift = 0.06f;
     [SerializeField] private float diveRate = 0.1f;
@@ -42,11 +41,7 @@ public class FlightController : MonoBehaviour
     [SerializeField] private float maxRoll = 90f;
 
     [SerializeField] private float boostSpeed = 150f;
-
-    [Header("Physics Settings")]
-    [Tooltip("Control the stability of the flight. 1 = Perfect aerodynamics, 0 = Free tumbling/sliding.")]
-    [Range(0f, 1f)] public float stability = 1.0f;
-
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
