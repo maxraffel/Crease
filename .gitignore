@@ -3,7 +3,7 @@
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
 .utmp/
-/[Ll]ibrary/
+/[Ll]ibrary*/
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
@@ -97,3 +97,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Modern Visual Studio Solution files
+*.slnx
+*.slnx.sqlite
