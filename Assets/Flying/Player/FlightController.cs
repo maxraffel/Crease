@@ -21,7 +21,8 @@ public class FlightController : MonoBehaviour
 
     private float roll = 0f;
     private float targetRoll = 0f;
-    
+
+
     [SerializeField] private float gravity = 0.08f;
     [SerializeField] private float lift = 0.06f;
     [SerializeField] private float diveRate = 0.1f;
@@ -41,7 +42,10 @@ public class FlightController : MonoBehaviour
     [SerializeField] private float maxRoll = 90f;
 
     [SerializeField] private float boostSpeed = 150f;
+
+
     
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -74,41 +78,33 @@ public class FlightController : MonoBehaviour
 
         float horizontalSpeed = new Vector3(velocity.x, 0, velocity.z).magnitude;
 
-        // gravity (Constant, acts regardless of stability)
+        // gravity
         velocity.y -= gravity;
 
-        // lift (Dependent on Stability)
-        // If unstable, wings don't generate coherent lift.
-        velocity.y += cosPitch * cosPitch * lift * stability;
+        // lift
+        velocity.y += cosPitch * cosPitch * lift;
 
-        // convert dive speed into forward speed (Dependent on Stability)
-        // Unstable planes tumble, they don't efficiently convert potential energy to kinetic.
+        // convert dive speed into forward speed
         if (velocity.y < 0 && cosPitch > 0) {
-            float yAcc = velocity.y * -diveRate * cosPitch * cosPitch * stability;
+            float yAcc = velocity.y * -diveRate * cosPitch * cosPitch;
             velocity.y += yAcc;
             velocity.x += lookDirection.x * yAcc / cosPitch;
             velocity.z += lookDirection.z * yAcc / cosPitch;
         }
-        
-        // climbing (Dependent on Stability)
+        // climbing
         if (pitchRadians < 0) {
-            float yAcc = horizontalSpeed * -sinPitch * climbRate * stability;
+            float yAcc = horizontalSpeed * -sinPitch * climbRate;
             velocity.y += yAcc * climbEfficiency;
             velocity.x -= lookDirection.x * yAcc / cosPitch;
             velocity.z -= lookDirection.z * yAcc / cosPitch;
         }
-        
-        // redirect horizontal speed (Turn Interpolation)
+        // redirect horizontal speed
         if (cosPitch > 0) {
-            // Scale turn capability by stability. Lower stability = less redirection (more drift)
-            float currentTurnInterp = turnInterpolation * stability;
-            velocity.x += (lookDirection.x / cosPitch * horizontalSpeed - velocity.x) * currentTurnInterp;
-            velocity.z += (lookDirection.z / cosPitch * horizontalSpeed - velocity.z) * currentTurnInterp;
+            velocity.x += (lookDirection.x / cosPitch * horizontalSpeed - velocity.x) * turnInterpolation;
+            velocity.z += (lookDirection.z / cosPitch * horizontalSpeed - velocity.z) * turnInterpolation;
         }
 
         // drag
-        // Drag remains effective even when unstable, but we might optionally reduce it to allow 'flinging'
-        // For now, standard drag is fine.
         velocity.x *= xDrag;
         velocity.y *= yDrag;
         velocity.z *= zDrag;
@@ -117,29 +113,7 @@ public class FlightController : MonoBehaviour
     }
 
     private void UpdateRotation() {
-        Quaternion targetRotation = Quaternion.Euler(pitch, yaw, 0f);
-
-        // If stability is perfect (1.0), we snap to target (Arcade style).
-        // If stability is compromised (< 1.0), we Slerp towards target, allowing physics (wind) to affect rotation.
-        // We use a high base lerp speed so it feels responsive, but scaled by stability.
-        if (stability < 0.99f)
-        {
-            // Slerp factor: 
-            // - High stability: fast correction (stiff spring)
-            // - Low stability: slow correction (loose spring, wind can overpower it)
-            float correctionStrength = stability * 10f * Time.fixedDeltaTime; 
-            Quaternion smoothedRotation = Quaternion.Slerp(rb.rotation, targetRotation, correctionStrength);
-            rb.MoveRotation(smoothedRotation);
-            
-            // Optional: Sync internal pitch/yaw with actual physics rotation to prevent 'snapping' when stability returns?
-            // For now, we act as a "Righting Moment" (Spring) which is aerodynamically correct. 
-            // The plane tries to fly straight, wind fights it.
-        }
-        else
-        {
-            rb.MoveRotation(targetRotation);
-        }
-
+        rb.MoveRotation(Quaternion.Euler(pitch, yaw, 0f));
         if (meshTransform != null) {
             meshTransform.localRotation = Quaternion.Euler(roll + meshRotation.x, meshRotation.y, meshRotation.z);
         }
