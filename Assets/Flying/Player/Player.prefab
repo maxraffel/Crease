@@ -102,6 +102,9 @@ GameObject:
   - component: {fileID: 6411813560646232638}
   - component: {fileID: 6410089066696951640}
   - component: {fileID: 5034146055513172917}
+  - component: {fileID: 6024960051557063255}
+  - component: {fileID: 5576785541387470566}
+  - component: {fileID: 185509089845354311}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -210,3 +213,64 @@ MonoBehaviour:
   xDrag: 0.99
   yDrag: 0.98
   zDrag: 0.99
+--- !u!114 &6024960051557063255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7903687590958615882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3048884de5f8b384a89f73565847f63e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FlightForceReceiver
+  activeWindZones: []
+  windForceMultiplier: 1
+--- !u!136 &5576785541387470566
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7903687590958615882}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.21088386
+  m_Height: 1.1315231
+  m_Direction: 2
+  m_Center: {x: 0, y: 0.09, z: -0.065761566}
+--- !u!114 &185509089845354311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7903687590958615882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76040ddd09b08443ea1f0120ef24ab48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCrashHandler
+  flightController: {fileID: 6410089066696951640}
+  rb: {fileID: 6411813560646232638}
+  obstacleTag: Obstacle
+  groundTag: Ground
+  zeroVelocityOnCrash: 1
+  stopCompletelyOnLand: 1
+  setKinematicOnLand: 1
+  clearAngularVelocityOnCrash: 1
+  freezeRotationOnCrash: 1
+  clearAngularVelocityOnLand: 1
+  freezeRotationOnLand: 1
+  cameraController: {fileID: 0}

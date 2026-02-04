@@ -71,16 +71,15 @@ public class FrustumWindZone : WindProvider
         Vector3 localPos = transform.InverseTransformPoint(worldPosition);
 
         // 2. Check Height Bounds
-        // FrustumTrigger creates a mesh centered at 0. Height goes from -h/2 to +h/2.
-        float halfHeight = _shape.height * 0.5f;
-        if (localPos.y < -halfHeight || localPos.y > halfHeight)
+        // FrustumTrigger creates a mesh from Y=0 (bottom) to Y=height (top)
+        if (localPos.y < 0 || localPos.y > _shape.height)
         {
             return Vector3.zero;
         }
 
         // 3. Check Radius at this specific height
-        // Map Y from [-halfH, halfH] to [0, 1] for Lerp
-        float t = Mathf.InverseLerp(-halfHeight, halfHeight, localPos.y);
+        // Map Y from [0, height] to [0, 1] for Lerp
+        float t = Mathf.InverseLerp(0, _shape.height, localPos.y);
         
         // Calculate the maximum radius at this Y level
         float maxRadiusAtY = Mathf.Lerp(_shape.bottomRadius, _shape.topRadius, t);

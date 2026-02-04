@@ -178,11 +178,13 @@ namespace PhysicsHelpers
         // Native Unity Trigger Callbacks
         private void OnTriggerEnter(Collider other)
         {
+            Debug.Log("FrustumTrigger OnTriggerEnter with " + other.name);
             onTriggerEnter?.Invoke(other);
         }
 
         private void OnTriggerExit(Collider other)
         {
+            Debug.Log("FrustumTrigger OnTriggerExit with " + other.name);
             onTriggerExit?.Invoke(other);
         }
 
