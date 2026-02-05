@@ -142,11 +142,11 @@ public class FlightController : MonoBehaviour
         }
         if (Keyboard.current.aKey.isPressed) {
             yaw -= yawSpeed * Time.fixedDeltaTime;
-            targetRoll -= rollSpeed * Time.fixedDeltaTime;
+            roll -= rollSpeed * Time.fixedDeltaTime;
         }
         if (Keyboard.current.dKey.isPressed) {
             yaw += yawSpeed * Time.fixedDeltaTime;
-            targetRoll += rollSpeed * Time.fixedDeltaTime;
+            roll += rollSpeed * Time.fixedDeltaTime;
         } if (Keyboard.current.spaceKey.isPressed) {
             Boost();
         }
@@ -155,11 +155,11 @@ public class FlightController : MonoBehaviour
         if (!Keyboard.current.aKey.isPressed && !Keyboard.current.dKey.isPressed) {
             // return to level roll
             if (roll > 0f) {
-                targetRoll -= rollBackSpeed * Time.fixedDeltaTime;
-                if (targetRoll < 0f) targetRoll = 0f;
+                roll -= rollBackSpeed * Time.fixedDeltaTime;
+                if (roll < 0f) roll = 0f;
             } else if (roll < 0f) {
-                targetRoll += rollBackSpeed * Time.fixedDeltaTime;
-                if (targetRoll > 0f) targetRoll = 0f;
+                roll += rollBackSpeed * Time.fixedDeltaTime;
+                if (roll > 0f) roll = 0f;
             }
         }
     }
