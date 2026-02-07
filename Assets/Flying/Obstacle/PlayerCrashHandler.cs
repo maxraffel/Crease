@@ -52,7 +52,7 @@ public class PlayerCrashHandler : MonoBehaviour
     private void Crash()
     {
         crashed = true;
-        cameraController?.SetCrashed(true);
+        // cameraController?.SetCrashed(true);
         
         if (flightController != null)
             flightController.enabled = false;

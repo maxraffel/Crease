@@ -181,11 +181,11 @@ MonoBehaviour:
   xDrag: 0.995
   yDrag: 0.99
   zDrag: 0.995
-  pitchSpeed: 45
-  maxPitch: 90
+  pitchSpeed: 60
+  maxPitch: 89
   yawSpeed: 45
-  rollSpeed: 20
-  rollBackSpeed: 45
+  rollSpeed: 100
+  rollBackSpeed: 150
   maxRoll: 45
   boostSpeed: 3
 --- !u!114 &5034146055513172917

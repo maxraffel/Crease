@@ -12,6 +12,7 @@ public class FlightController : MonoBehaviour
     [SerializeField] private float mouseSmoothing = 0.1f;
 
     [SerializeField] private float pitch = 0f;
+    public float Pitch => pitch;
 
     [SerializeField] private Transform meshTransform;
     private Vector3 meshRotation;
