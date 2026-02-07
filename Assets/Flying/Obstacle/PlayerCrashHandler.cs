@@ -1,15 +1,16 @@
 using UnityEngine;
 
+/// <summary>
+/// Handles the crash state of the player — disabling flight, enabling gravity, and
+/// stabilizing the rigidbody. Does NOT handle collision detection; that is done by
+/// FlightCollisionController, which may call Crash() when appropriate.
+/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerCrashHandler : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private MonoBehaviour flightController;
     [SerializeField] private Rigidbody rb;
-
-    [Header("Tags")]
-    [SerializeField] private string obstacleTag = "Obstacle";
-    [SerializeField] private string groundTag = "Ground";
 
     [Header("Crash Tuning")]
     [SerializeField] private bool zeroVelocityOnCrash = true;
@@ -24,6 +25,9 @@ public class PlayerCrashHandler : MonoBehaviour
 
     [SerializeField] private CameraController cameraController;
 
+    public bool IsCrashed => crashed;
+    public bool IsLanded => landed;
+
     private bool crashed = false;
     private bool landed = false;
 
@@ -35,72 +39,65 @@ public class PlayerCrashHandler : MonoBehaviour
         originalConstraints = rb.constraints;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    /// <summary>
+    /// Enters the crashed state — disables flight and lets the plane fall.
+    /// </summary>
+    public void Crash()
     {
-        if (!crashed && collision.collider.CompareTag(obstacleTag))
-        {
-            Crash();
-            return;
-        }
+        if (crashed) return;
 
-        if (crashed && !landed && collision.collider.CompareTag(groundTag))
-        {
-            Land();
-        }
-    }
-
-    private void Crash()
-    {
         crashed = true;
-        // cameraController?.SetCrashed(true);
-        
+
         if (flightController != null)
             flightController.enabled = false;
-        
+
         rb.useGravity = true;
         rb.isKinematic = false;
 
-        // Stop forward motion immediately
         if (zeroVelocityOnCrash)
-        {
             rb.linearVelocity = Vector3.zero;
-        }
 
-        // Prevent spin after collision
         if (clearAngularVelocityOnCrash)
-        {
             rb.angularVelocity = Vector3.zero;
-        }
 
         if (freezeRotationOnCrash)
-        {
             rb.constraints = RigidbodyConstraints.FreezeRotation;
-        }
     }
 
-    private void Land()
+    /// <summary>
+    /// Called when the crashed plane touches the ground.
+    /// </summary>
+    public void Land()
     {
-        landed = true;
-        
-        if (stopCompletelyOnLand)
-        {
-            rb.linearVelocity = Vector3.zero;
-        }
+        if (!crashed || landed) return;
 
-        // Stop remaining spin before freezing/kinematic
+        landed = true;
+
+        if (stopCompletelyOnLand)
+            rb.linearVelocity = Vector3.zero;
+
         if (clearAngularVelocityOnLand)
-        {
             rb.angularVelocity = Vector3.zero;
-        }
 
         if (freezeRotationOnLand)
-        {
             rb.constraints = RigidbodyConstraints.FreezeRotation;
-        }
 
         if (setKinematicOnLand)
-        {
             rb.isKinematic = true;
-        }
+    }
+
+    /// <summary>
+    /// Resets the crash state (useful for scene reloads or respawns).
+    /// </summary>
+    public void ResetCrash()
+    {
+        crashed = false;
+        landed = false;
+        rb.isKinematic = false;
+        rb.useGravity = false;
+        rb.constraints = originalConstraints;
+
+        if (flightController != null)
+            flightController.enabled = true;
     }
 }

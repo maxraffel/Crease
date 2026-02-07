@@ -45,7 +45,7 @@ namespace USCG.Core
                 return;
             }
 
-            bool bAreKeyCodesPressed = Keyboard.current.rKey.wasPressedThisFrame;;
+            bool bAreKeyCodesPressed = InputManager.Instance.ResetTriggered;
 
             if (bAreKeyCodesPressed)
             {

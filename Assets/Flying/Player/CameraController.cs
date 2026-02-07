@@ -9,6 +9,16 @@ public class CameraController : MonoBehaviour
     [Tooltip("Offset behind and above the plane (in rig-local space).")]
     public Vector3 defaultOffset = new Vector3(0f, 2f, -8f);
 
+    [Header("Camera Zoom")]
+    [Tooltip("How fast the camera zooms in/out per scroll tick.")]
+    public float zoomSpeed = 2f;
+
+    [Tooltip("Minimum (closest) Z offset value (least negative / closest to zero).")]
+    public float minZoomOffset = -3f;
+
+    [Tooltip("Maximum (farthest) Z offset value (most negative / farthest away).")]
+    public float maxZoomOffset = -20f;
+
     [Header("Follow Speeds")]
     [Tooltip("How fast the camera yaw catches up to the plane's heading.")]
     public float yawSpeed = 5f;
@@ -77,6 +87,15 @@ public class CameraController : MonoBehaviour
 
         float dt = Time.deltaTime;
         if (dt < 0.0001f) return; // guard against zero dt
+
+        // --- Camera zoom via input system ---
+        float scrollY = InputManager.Instance.CameraZoomInput.y;
+        if (Mathf.Abs(scrollY) > 0.01f)
+        {
+            // Scroll up (positive y) → increase z (zoom in), scroll down → decrease z (zoom out)
+            defaultOffset.z += Mathf.Sign(scrollY) * zoomSpeed * dt;
+            defaultOffset.z = Mathf.Clamp(defaultOffset.z, maxZoomOffset, minZoomOffset);
+        }
 
         // --- Target angles ---
         Vector3 targetEuler = target.rotation.eulerAngles;

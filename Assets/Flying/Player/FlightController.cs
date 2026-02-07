@@ -135,26 +135,24 @@ public class FlightController : MonoBehaviour
     }
 
     private void ProcessKeyboardInput() {
-        if (Keyboard.current.wKey.isPressed) {
-            pitch += pitchSpeed * Time.fixedDeltaTime;
+        Vector2 move = InputManager.Instance.MoveInput;
+
+        // Pitch: move.y maps W(down=-1)/S(up=+1) from the input asset
+        pitch += move.y * pitchSpeed * Time.fixedDeltaTime;
+
+        // Yaw & roll
+        if (move.x != 0f) {
+            yaw += move.x * yawSpeed * Time.fixedDeltaTime;
+            roll += move.x * rollSpeed * Time.fixedDeltaTime;
         }
-        if (Keyboard.current.sKey.isPressed) {
-            pitch -= pitchSpeed * Time.fixedDeltaTime;
-        }
-        if (Keyboard.current.aKey.isPressed) {
-            yaw -= yawSpeed * Time.fixedDeltaTime;
-            roll -= rollSpeed * Time.fixedDeltaTime;
-        }
-        if (Keyboard.current.dKey.isPressed) {
-            yaw += yawSpeed * Time.fixedDeltaTime;
-            roll += rollSpeed * Time.fixedDeltaTime;
-        } if (Keyboard.current.spaceKey.isPressed) {
+
+        // Boost
+        if (InputManager.Instance.BoostPressed) {
             Boost();
         }
 
-
-        if (!Keyboard.current.aKey.isPressed && !Keyboard.current.dKey.isPressed) {
-            // return to level roll
+        // Roll back to level when no lateral input
+        if (move.x == 0f) {
             if (roll > 0f) {
                 roll -= rollBackSpeed * Time.fixedDeltaTime;
                 if (roll < 0f) roll = 0f;
@@ -177,6 +175,11 @@ public class FlightController : MonoBehaviour
         // Smooth interpolation to target angles
         pitch = Mathf.Lerp(pitch, targetPitch, mouseSmoothing);
         yaw = Mathf.Lerp(yaw, targetYaw, mouseSmoothing);
+
+        // Boost via input system
+        if (InputManager.Instance.BoostPressed) {
+            Boost();
+        }
         
         // Toggle mouse lock with Escape
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
