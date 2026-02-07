@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 public class FlightController : MonoBehaviour
 {
-    private Rigidbody rb;
+    private KinematicBody body;
 
     [Header("Control Mode")]
     [SerializeField] private bool useMouseControl = false;
@@ -24,6 +24,7 @@ public class FlightController : MonoBehaviour
     private float targetRoll = 0f;
 
 
+    [Header("Flight Physics")]
     [SerializeField] private float gravity = 0.08f;
     [SerializeField] private float lift = 0.06f;
     [SerializeField] private float diveRate = 0.1f;
@@ -34,6 +35,7 @@ public class FlightController : MonoBehaviour
     [SerializeField] private float yDrag = 0.98f;
     [SerializeField] private float zDrag = 0.99f;
 
+    [Header("Input Tuning")]
     [SerializeField] private float pitchSpeed = 45f;
     [SerializeField] private float maxPitch = 90f;
     [SerializeField] private float yawSpeed = 45f;
@@ -44,13 +46,14 @@ public class FlightController : MonoBehaviour
 
     [SerializeField] private float boostSpeed = 150f;
 
+    [Header("Initial Speed")]
+    [SerializeField] private float initialSpeed = 10f;
 
-    
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = transform.forward * 10f;
+        body = GetComponent<KinematicBody>();
+        body.Velocity = transform.forward * initialSpeed;
         
         if (useMouseControl)
         {
@@ -58,7 +61,7 @@ public class FlightController : MonoBehaviour
             Cursor.visible = false;
         }
 
-        meshRotation = meshTransform.eulerAngles; // save initial rotation
+        meshRotation = meshTransform.eulerAngles;
     }
 
     void FixedUpdate()
@@ -68,120 +71,122 @@ public class FlightController : MonoBehaviour
         UpdateRotation();
     }
 
-    private void UpdateVelocity() {
-        Vector3 velocity = rb.linearVelocity;
+    private void UpdateVelocity()
+    {
+        Vector3 velocity = body.Velocity;
 
         float pitchRadians = pitch * Mathf.Deg2Rad;
         float cosPitch = Mathf.Cos(pitchRadians);
         float sinPitch = Mathf.Sin(pitchRadians);
 
         Vector3 lookDirection = transform.forward;
-
         float horizontalSpeed = new Vector3(velocity.x, 0, velocity.z).magnitude;
 
-        // gravity
+        // Gravity
         velocity.y -= gravity;
 
-        // lift
+        // Lift
         velocity.y += cosPitch * cosPitch * lift;
 
-        // convert dive speed into forward speed
-        if (velocity.y < 0 && cosPitch > 0) {
+        // Convert dive speed into forward speed
+        if (velocity.y < 0 && cosPitch > 0)
+        {
             float yAcc = velocity.y * -diveRate * cosPitch * cosPitch;
             velocity.y += yAcc;
             velocity.x += lookDirection.x * yAcc / cosPitch;
             velocity.z += lookDirection.z * yAcc / cosPitch;
         }
-        // climbing
-        if (pitchRadians < 0) {
+
+        // Climbing
+        if (pitchRadians < 0)
+        {
             float yAcc = horizontalSpeed * -sinPitch * climbRate;
             velocity.y += yAcc * climbEfficiency;
             velocity.x -= lookDirection.x * yAcc / cosPitch;
             velocity.z -= lookDirection.z * yAcc / cosPitch;
         }
-        // redirect horizontal speed
-        if (cosPitch > 0) {
+
+        // Redirect horizontal speed toward look direction
+        if (cosPitch > 0)
+        {
             velocity.x += (lookDirection.x / cosPitch * horizontalSpeed - velocity.x) * turnInterpolation;
             velocity.z += (lookDirection.z / cosPitch * horizontalSpeed - velocity.z) * turnInterpolation;
         }
 
-        // drag
+        // Drag
         velocity.x *= xDrag;
         velocity.y *= yDrag;
         velocity.z *= zDrag;
 
-        rb.linearVelocity = velocity;
+        body.Velocity = velocity;
     }
 
-    private void UpdateRotation() {
-        rb.MoveRotation(Quaternion.Euler(pitch, yaw, 0f));
-        if (meshTransform != null) {
+    private void UpdateRotation()
+    {
+        body.MoveRotation(Quaternion.Euler(pitch, yaw, 0f));
+
+        if (meshTransform != null)
+        {
             meshTransform.localRotation = Quaternion.Euler(roll + meshRotation.x, meshRotation.y, meshRotation.z);
         }
     }
 
-    private void ProcessInput() {
+    private void ProcessInput()
+    {
         if (useMouseControl)
-        {
             ProcessMouseInput();
-        }
         else
-        {
             ProcessKeyboardInput();
-        }
         
         pitch = Mathf.Clamp(pitch, -maxPitch, maxPitch);
         roll = Mathf.Clamp(roll, -maxRoll, maxRoll);
     }
 
-    private void ProcessKeyboardInput() {
+    private void ProcessKeyboardInput()
+    {
         Vector2 move = InputManager.Instance.MoveInput;
 
-        // Pitch: move.y maps W(down=-1)/S(up=+1) from the input asset
         pitch += move.y * pitchSpeed * Time.fixedDeltaTime;
 
-        // Yaw & roll
-        if (move.x != 0f) {
+        if (move.x != 0f)
+        {
             yaw += move.x * yawSpeed * Time.fixedDeltaTime;
             roll += move.x * rollSpeed * Time.fixedDeltaTime;
         }
 
-        // Boost
-        if (InputManager.Instance.BoostPressed) {
+        if (InputManager.Instance.BoostPressed)
             Boost();
-        }
 
         // Roll back to level when no lateral input
-        if (move.x == 0f) {
-            if (roll > 0f) {
+        if (move.x == 0f)
+        {
+            if (roll > 0f)
+            {
                 roll -= rollBackSpeed * Time.fixedDeltaTime;
                 if (roll < 0f) roll = 0f;
-            } else if (roll < 0f) {
+            }
+            else if (roll < 0f)
+            {
                 roll += rollBackSpeed * Time.fixedDeltaTime;
                 if (roll > 0f) roll = 0f;
             }
         }
     }
 
-    private void ProcessMouseInput() {
+    private void ProcessMouseInput()
+    {
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
         
-        // Update target angles based on mouse movement
         targetYaw += mouseDelta.x * mouseSensitivity * Time.fixedDeltaTime;
         targetPitch -= mouseDelta.y * mouseSensitivity * Time.fixedDeltaTime;
-        
         targetPitch = Mathf.Clamp(targetPitch, -90f, 90f);
         
-        // Smooth interpolation to target angles
         pitch = Mathf.Lerp(pitch, targetPitch, mouseSmoothing);
         yaw = Mathf.Lerp(yaw, targetYaw, mouseSmoothing);
 
-        // Boost via input system
-        if (InputManager.Instance.BoostPressed) {
+        if (InputManager.Instance.BoostPressed)
             Boost();
-        }
         
-        // Toggle mouse lock with Escape
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (Cursor.lockState == CursorLockMode.Locked)
@@ -197,8 +202,8 @@ public class FlightController : MonoBehaviour
         }
     }
 
-    private void Boost() {
-        Vector3 boostVelocity = transform.forward * boostSpeed;
-        rb.linearVelocity += boostVelocity;
+    private void Boost()
+    {
+        body.Velocity += transform.forward * boostSpeed;
     }
 }

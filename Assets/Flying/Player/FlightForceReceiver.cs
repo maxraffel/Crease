@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 [RequireComponent(typeof(FlightController))]
 public class FlightForceReceiver : MonoBehaviour
 {
@@ -13,13 +13,11 @@ public class FlightForceReceiver : MonoBehaviour
     [Tooltip("Multiplier for how much the wind affects the physics.")]
     public float windForceMultiplier = 1.0f;
 
-    private Rigidbody _rb;
-    private FlightController _flightController;
+    private KinematicBody _body;
 
     private void Awake()
     {
-        _rb = GetComponent<Rigidbody>();
-        _flightController = GetComponent<FlightController>();
+        _body = GetComponent<KinematicBody>();
     }
 
     public void AddWindZone(WindProvider zone)
@@ -44,7 +42,6 @@ public class FlightForceReceiver : MonoBehaviour
 
         Vector3 totalWindForce = Vector3.zero;
 
-        // Sum up forces from all active zones at the plane's center position
         for (int i = activeWindZones.Count - 1; i >= 0; i--)
         {
             WindProvider zone = activeWindZones[i];
@@ -53,41 +50,46 @@ public class FlightForceReceiver : MonoBehaviour
                 activeWindZones.RemoveAt(i);
                 continue;
             }
-            // Use transform.position (Center of the plane) for detection
             totalWindForce += zone.GetWindForceAtPoint(transform.position);
         }
 
-        // Apply Physics Force
         if (totalWindForce.sqrMagnitude > 0.01f)
         {
             Vector3 finalForce = totalWindForce * windForceMultiplier;
-            _rb.AddForce(finalForce, ForceMode.Force);
+            _body.AddForce(finalForce);
         }
     }
 
     /// <summary>
-    /// Apply an instantaneous force (Impulse).
-    /// Great for explosions, collisions, or strong wind gusts.
+    /// Apply an instantaneous impulse (explosions, collisions, strong gusts).
     /// </summary>
-    /// <param name="force">The force vector.</param>
     public void AddImpact(Vector3 force)
     {
-        _rb.AddForce(force, ForceMode.Impulse);
+        _body.AddImpulse(force);
     }
 
     /// <summary>
-    /// Apply a continuous force.
+    /// Apply a continuous or instantaneous external force.
     /// </summary>
     public void AddExternalForce(Vector3 force, ForceMode mode = ForceMode.Force)
     {
-        _rb.AddForce(force, mode);
+        _body.AddForce(force, mode);
     }
 
     /// <summary>
-    /// Adds a standard explosion force.
+    /// Simulates an explosion force by computing direction and falloff manually.
     /// </summary>
     public void AddExplosionForce(float explosionForce, Vector3 explosionPosition, float explosionRadius, float upwardsModifier = 0.0f)
     {
-        _rb.AddExplosionForce(explosionForce, explosionPosition, explosionRadius, upwardsModifier, ForceMode.Impulse);
+        Vector3 dir = transform.position - explosionPosition;
+        float distance = dir.magnitude;
+
+        if (distance > explosionRadius || distance < 0.001f) return;
+
+        float falloff = 1f - (distance / explosionRadius);
+        Vector3 force = dir.normalized * explosionForce * falloff;
+        force.y += upwardsModifier * falloff;
+
+        _body.AddImpulse(force);
     }
 }

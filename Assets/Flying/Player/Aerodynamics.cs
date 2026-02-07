@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 [RequireComponent(typeof(FlightForceReceiver))]
 public class Aerodynamics : MonoBehaviour
 {
@@ -12,16 +12,11 @@ public class Aerodynamics : MonoBehaviour
     [Header("Settings")]
     [Tooltip("Multiplier for how much the wind affects the physics.")]
     public float windForceMultiplier = 1.0f;
-    
-    // [Tooltip("How much the wind turbulence reduces flight stability.")]
-    // public float instabilityFactor = 0.5f;
 
-    // private Rigidbody _rb;
     private FlightForceReceiver _receiver;
 
     void Start()
     {
-        // _rb = GetComponent<Rigidbody>();
         _receiver = GetComponent<FlightForceReceiver>();
     }
 
@@ -64,19 +59,7 @@ public class Aerodynamics : MonoBehaviour
         if (totalWindForce.sqrMagnitude > 0.01f)
         {
             Vector3 finalForce = totalWindForce * windForceMultiplier;
-            
-            // Apply force to the center (No Torque/Rotation generated)
-            // Use ForceMode.Force for continuous pushing
             _receiver.AddExternalForce(finalForce, ForceMode.Force);
-
-            // // Apply Instability
-            // // Even without rotation, strong wind should still make the flight feel less stable/controlled
-            // float turbulence = finalForce.magnitude;
-            // if (turbulence > 0)
-            // {
-            //     float destabilizeAmount = (turbulence / _rb.mass) * instabilityFactor * Time.fixedDeltaTime;
-            //     _receiver.AddExternalForce(Vector3.zero, ForceMode.Force, destabilizeAmount);
-            // }
         }
     }
 }

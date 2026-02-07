@@ -1,12 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 public class FlightControllerForces : MonoBehaviour
 {
     [SerializeField] private Transform meshTransform;
 
-    private Rigidbody rb;
+    private KinematicBody body;
 
     private float pitch = 0f;
     private float yaw = 0f;
@@ -34,11 +34,10 @@ public class FlightControllerForces : MonoBehaviour
 
     private Vector3 meshRotation;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        meshRotation = meshTransform.eulerAngles; // save initial rotation
+        body = GetComponent<KinematicBody>();
+        meshRotation = meshTransform.eulerAngles;
     }
 
     // Update is called once per frame
@@ -59,7 +58,7 @@ public class FlightControllerForces : MonoBehaviour
         yaw = Mathf.Lerp(yaw, targetYaw, Time.fixedDeltaTime * yawSpeed);
         roll = Mathf.Lerp(roll, targetRoll, Time.fixedDeltaTime * rollSpeed);
 
-        rb.MoveRotation(Quaternion.Euler(pitch, yaw, 0f));
+        body.MoveRotation(Quaternion.Euler(pitch, yaw, 0f));
         meshTransform.localRotation = Quaternion.Euler(meshRotation.x + roll, meshRotation.y, meshRotation.z);
         // Debug.Log("Pitch: " + pitch + " Yaw: " + yaw + " Roll: " + roll + " Mesh Rotation: " + meshRotation);
     }
@@ -90,7 +89,7 @@ public class FlightControllerForces : MonoBehaviour
 
     private void HandlePhysics()
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity = body.Velocity;
         float speed = velocity.magnitude;
         float horizontalSpeed = new Vector3(velocity.x, 0f, velocity.z).magnitude;
         Vector3 horizontalLookDirection = new Vector3(transform.forward.x, 0f, transform.forward.z);
@@ -99,25 +98,25 @@ public class FlightControllerForces : MonoBehaviour
         float sinPitch = Mathf.Sin(pitch * Mathf.Deg2Rad);
 
         // gravity
-        rb.AddForce(Vector3.down * gravity);
+        body.AddForce(Vector3.down * gravity);
 
         // lift
-        rb.AddForce(transform.up * lift * velocity.magnitude);
+        body.AddForce(transform.up * lift * velocity.magnitude);
 
         // convert downward speed into forward speed
         if (velocity.y < 0 && cosPitch > 0)
         {
             float strippedVerticalSpeed = -velocity.y * cosPitch * cosPitch * diveRate;
-            rb.AddForce(Vector3.up * strippedVerticalSpeed);
-            rb.AddForce(horizontalLookDirection * strippedVerticalSpeed / cosPitch);
+            body.AddForce(Vector3.up * strippedVerticalSpeed);
+            body.AddForce(horizontalLookDirection * strippedVerticalSpeed / cosPitch);
         }
 
         // climb
         if (pitch < 0)
         {
             float strippedHorizontalSpeed = horizontalSpeed * -sinPitch * climbRate;
-            rb.AddForce(transform.up * strippedHorizontalSpeed * climbEfficiency);
-            rb.AddForce(-horizontalLookDirection * strippedHorizontalSpeed);
+            body.AddForce(transform.up * strippedHorizontalSpeed * climbEfficiency);
+            body.AddForce(-horizontalLookDirection * strippedHorizontalSpeed);
         }
 
         // redirect velocity towards look direction
@@ -126,15 +125,15 @@ public class FlightControllerForces : MonoBehaviour
             Vector3 desiredHorizontalVelocity = horizontalLookDirection.normalized * horizontalSpeed;
             Vector3 horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
             Vector3 velocityChange = (desiredHorizontalVelocity / cosPitch - horizontalVelocity) * turnInterpolation;
-            rb.AddForce(velocityChange);
+            body.AddForce(velocityChange);
         }
 
         // drag
-        rb.AddForce(velocity.x * -xDrag, velocity.y * -yDrag, velocity.z * -zDrag);
+        body.AddForce(new Vector3(velocity.x * -xDrag, velocity.y * -yDrag, velocity.z * -zDrag));
     }
 
     private void Boost()
     {
-        rb.AddRelativeForce(Vector3.forward * 500f);
+        body.AddForce(transform.forward * 500f, ForceMode.Impulse);
     }
 }

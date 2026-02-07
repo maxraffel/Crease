@@ -6,12 +6,12 @@ using UnityEngine.Events;
 /// recovery. Ground hits while crashed delegate to PlayerCrashHandler.Land().
 /// All tuning values are exposed to the Inspector for rapid iteration.
 /// </summary>
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 public class FlightCollisionController : MonoBehaviour
 {
     // ------------------------------------------------------------------ Refs
     [Header("References")]
-    [SerializeField] private Rigidbody rb;
+    [SerializeField] private KinematicBody body;
     [SerializeField] private PlayerCrashHandler crashHandler;
 
     // ------------------------------------------------------------------ Tags
@@ -76,38 +76,42 @@ public class FlightCollisionController : MonoBehaviour
 
     private void Awake()
     {
-        if (rb == null) rb = GetComponent<Rigidbody>();
+        if (body == null) body = GetComponent<KinematicBody>();
     }
 
     // ================================================================== Collision
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
         // --- Ground landing while crashed ---
         if (landOnGroundAfterCrash
             && crashHandler != null
             && crashHandler.IsCrashed
-            && collision.collider.CompareTag(groundTag))
+            && other.CompareTag(groundTag))
         {
             crashHandler.Land();
             return;
         }
 
         // --- Obstacle knockback ---
-        if (collision.collider.CompareTag(obstacleTag))
+        if (other.CompareTag(obstacleTag))
         {
             if (IsInvulnerable) return;
-            ApplyKnockback(collision);
+            ApplyKnockback(other);
         }
     }
 
     // ================================================================== Knockback
-    private void ApplyKnockback(Collision collision)
+    private void ApplyKnockback(Collider obstacle)
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity = body.Velocity;
         _preCollisionSpeed = velocity.magnitude;
 
-        // Collision normal pointing away from the obstacle
-        Vector3 contactNormal = collision.contacts[0].normal.normalized;
+        // Calculate contact normal: opposite of velocity direction (we hit what we were moving towards)
+        Vector3 contactNormal = -velocity.normalized;
+        
+        // Fallback if velocity is near-zero: use direction from obstacle center to player
+        if (contactNormal.sqrMagnitude < 0.001f)
+            contactNormal = (transform.position - obstacle.bounds.center).normalized;
 
         // Build knockback direction: blend between pure normal and reflected velocity
         Vector3 reflected = Vector3.Reflect(velocity.normalized, contactNormal);
@@ -120,7 +124,7 @@ public class FlightCollisionController : MonoBehaviour
             maxKnockbackMagnitude);
 
         // Apply
-        rb.linearVelocity = knockbackDir * impulseMagnitude;
+        body.SetVelocity(knockbackDir * impulseMagnitude);
 
         // Start recovery state
         _targetRecoverySpeed = _preCollisionSpeed * speedRetention;
@@ -143,7 +147,7 @@ public class FlightCollisionController : MonoBehaviour
             OnRecoveryStarted?.Invoke();
         }
 
-        float currentSpeed = rb.linearVelocity.magnitude;
+        float currentSpeed = body.Speed;
         float speedDelta = _targetRecoverySpeed - currentSpeed;
 
         // Check if we've reached or exceeded target speed
@@ -161,25 +165,24 @@ public class FlightCollisionController : MonoBehaviour
         // If we've exceeded recovery duration, clamp to target and complete
         if (remainingTime <= 0f)
         {
-            Vector3 forward = rb.linearVelocity.normalized;
+            Vector3 forward = body.Velocity.normalized;
             if (forward.sqrMagnitude < 0.001f)
                 forward = transform.forward;
 
-            rb.linearVelocity = forward * _targetRecoverySpeed;
+            body.SetVelocity(forward * _targetRecoverySpeed);
             _isRecovering = false;
             OnRecoveryComplete?.Invoke();
             return;
         }
 
         // Calculate required acceleration to reach target in remaining time
-        // a = Δv / Δt
         float requiredAcceleration = speedDelta / remainingTime;
 
         // Accelerate along current heading
-        Vector3 heading = rb.linearVelocity.normalized;
+        Vector3 heading = body.Velocity.normalized;
         if (heading.sqrMagnitude < 0.001f)
             heading = transform.forward;
 
-        rb.linearVelocity += heading * requiredAcceleration * Time.fixedDeltaTime;
+        body.Velocity += heading * requiredAcceleration * Time.fixedDeltaTime;
     }
 }

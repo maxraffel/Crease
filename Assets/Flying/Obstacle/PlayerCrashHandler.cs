@@ -1,27 +1,24 @@
 using UnityEngine;
 
 /// <summary>
-/// Handles the crash state of the player — disabling flight, enabling gravity, and
-/// stabilizing the rigidbody. Does NOT handle collision detection; that is done by
-/// FlightCollisionController, which may call Crash() when appropriate.
+/// Handles the crash state of the player — disabling flight and freezing the body.
+/// Does NOT handle collision detection; that is done by FlightCollisionController,
+/// which may call Crash() when appropriate.
 /// </summary>
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(KinematicBody))]
 public class PlayerCrashHandler : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private MonoBehaviour flightController;
-    [SerializeField] private Rigidbody rb;
+    [SerializeField] private KinematicBody body;
 
     [Header("Crash Tuning")]
     [SerializeField] private bool zeroVelocityOnCrash = true;
     [SerializeField] private bool stopCompletelyOnLand = true;
-    [SerializeField] private bool setKinematicOnLand = true;
 
-    [Header("Physics Stabilization")]
-    [SerializeField] private bool clearAngularVelocityOnCrash = true;
-    [SerializeField] private bool freezeRotationOnCrash = true;
-    [SerializeField] private bool clearAngularVelocityOnLand = true;
-    [SerializeField] private bool freezeRotationOnLand = true;
+    [Header("Gravity While Crashed")]
+    [Tooltip("Custom gravity applied after crash (body falls under its own sim).")]
+    [SerializeField] private float crashGravity = 20f;
 
     [SerializeField] private CameraController cameraController;
 
@@ -31,12 +28,18 @@ public class PlayerCrashHandler : MonoBehaviour
     private bool crashed = false;
     private bool landed = false;
 
-    private RigidbodyConstraints originalConstraints;
-
     private void Awake()
     {
-        if (rb == null) rb = GetComponent<Rigidbody>();
-        originalConstraints = rb.constraints;
+        if (body == null) body = GetComponent<KinematicBody>();
+    }
+
+    private void FixedUpdate()
+    {
+        // Apply gravity while crashed but not yet landed
+        if (crashed && !landed)
+        {
+            body.Velocity += Vector3.down * crashGravity * Time.fixedDeltaTime;
+        }
     }
 
     /// <summary>
@@ -51,17 +54,8 @@ public class PlayerCrashHandler : MonoBehaviour
         if (flightController != null)
             flightController.enabled = false;
 
-        rb.useGravity = true;
-        rb.isKinematic = false;
-
         if (zeroVelocityOnCrash)
-            rb.linearVelocity = Vector3.zero;
-
-        if (clearAngularVelocityOnCrash)
-            rb.angularVelocity = Vector3.zero;
-
-        if (freezeRotationOnCrash)
-            rb.constraints = RigidbodyConstraints.FreezeRotation;
+            body.SetVelocity(Vector3.zero);
     }
 
     /// <summary>
@@ -74,16 +68,9 @@ public class PlayerCrashHandler : MonoBehaviour
         landed = true;
 
         if (stopCompletelyOnLand)
-            rb.linearVelocity = Vector3.zero;
+            body.SetVelocity(Vector3.zero);
 
-        if (clearAngularVelocityOnLand)
-            rb.angularVelocity = Vector3.zero;
-
-        if (freezeRotationOnLand)
-            rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        if (setKinematicOnLand)
-            rb.isKinematic = true;
+        body.Frozen = true;
     }
 
     /// <summary>
@@ -93,9 +80,7 @@ public class PlayerCrashHandler : MonoBehaviour
     {
         crashed = false;
         landed = false;
-        rb.isKinematic = false;
-        rb.useGravity = false;
-        rb.constraints = originalConstraints;
+        body.Frozen = false;
 
         if (flightController != null)
             flightController.enabled = true;
